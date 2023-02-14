@@ -44,6 +44,7 @@ use Cake\Mailer\Mailer;
 use Cake\Mailer\TransportFactory;
 use Cake\Routing\Router;
 use Cake\Utility\Security;
+use Dotenv\Dotenv;
 
 /*
  * Read configuration file and inject configuration into various
@@ -57,6 +58,12 @@ try {
     Configure::config('default', new PhpConfig());
     Configure::load('app', 'default', false);
     Configure::load('default', 'default', false); // passbolt default config
+
+    if (!env('APP_NAME') && file_exists(CONFIG . '.env')) {
+        $dotenv = Dotenv::createImmutable(__DIR__);
+        $dotenv->load();
+    }
+
     if (\file_exists(CONFIG . DS . 'passbolt.php')) {
         Configure::load('passbolt', 'default', true); // merge with default config
 

@@ -150,6 +150,8 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
             ->addVendorPlugins()
             ->addPassboltPlugins();
 
+        $this->addPlugin('Amsdard/LdapAuthentication', ['bootstrap' => true, 'routes' => false]);
+        
         if (PHP_SAPI === 'cli') {
             $this->addCliPlugins();
         }

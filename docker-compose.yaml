@@ -1,0 +1,55 @@
+version: '3.9'
+services:
+    mailhog:
+        image: mailhog/mailhog
+        logging:
+            driver: 'none'  # disable saving logs
+        ports:
+            - 1025:1025 # smtp server
+            - 8025:8025 # web ui
+
+    db:
+        image: mariadb:10.3
+        restart: unless-stopped
+        ports:
+            - "3306:3306"
+        environment:
+            MYSQL_RANDOM_ROOT_PASSWORD: "true"
+            MYSQL_DATABASE: "passbolt"
+            MYSQL_USER: "passbolt"
+            MYSQL_PASSWORD: "P4ssb0lt"
+        volumes:
+            - database_volume:/var/lib/mysql
+
+    passbolt:
+        build: ./
+        #Alternatively you can use rootless:
+        #image: passbolt/passbolt:latest-ce-non-root
+        restart: unless-stopped
+        container_name: passbolt
+        depends_on:
+            - db
+        environment:
+            APP_FULL_BASE_URL: https://passbolt.local
+            DATASOURCES_DEFAULT_HOST: "db"
+            DATASOURCES_DEFAULT_USERNAME: "passbolt"
+            DATASOURCES_DEFAULT_PASSWORD: "P4ssb0lt"
+            DATASOURCES_DEFAULT_DATABASE: "passbolt"
+        volumes:
+            - ./:/usr/share/php/passbolt
+            - gpg_volume:/etc/passbolt/gpg
+            - jwt_volume:/etc/passbolt/jwt
+            - ./certs/passbolt.local.crt:/etc/ssl/certs/certificate.crt:ro
+            - ./certs/passbolt.local.key:/etc/ssl/certs/certificate.key:ro
+        ports:
+            - 80:80
+            - 443:443
+        command: [ "/usr/bin/wait-for.sh", "-t", "0", "db:3306", "--", "/docker-entrypoint.sh" ]
+        #Alternatively for non-root images:
+        # - 8080:80
+        # - 4433:433
+
+volumes:
+    database_volume:
+    gpg_volume:
+    jwt_volume:
